@@ -194,13 +194,16 @@ func (c *Client) sendBatchHTTP(ctx context.Context, op *requestOp, msgs []*jsonr
 	}
 	defer respBody.Close()
 
-	decoder := json.NewDecoder(respBody)
+	body, err := io.ReadAll(respBody)
+	if err != nil {
+		return err
+	}
 
 	var respmsgs []*jsonrpcMessage
-	if err := decoder.Decode(&respmsgs); err != nil {
+	if err := json.Unmarshal(body, &respmsgs); err != nil {
 
 		var resp jsonrpcMessage
-		if err := decoder.Decode(&resp); err != nil {
+		if err := json.Unmarshal(body, &resp); err != nil {
 			return err
 		}
 
