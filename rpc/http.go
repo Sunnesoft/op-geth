@@ -194,8 +194,20 @@ func (c *Client) sendBatchHTTP(ctx context.Context, op *requestOp, msgs []*jsonr
 	}
 	defer respBody.Close()
 
+	decoder := json.NewDecoder(respBody)
+
 	var respmsgs []*jsonrpcMessage
-	if err := json.NewDecoder(respBody).Decode(&respmsgs); err != nil {
+	if err := decoder.Decode(&respmsgs); err != nil {
+
+		var resp jsonrpcMessage
+		if err := decoder.Decode(&resp); err != nil {
+			return err
+		}
+
+		if resp.Error != nil {
+			return resp.Error
+		}
+
 		return err
 	}
 	op.resp <- respmsgs
